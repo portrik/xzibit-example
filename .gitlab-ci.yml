@@ -1,0 +1,66 @@
+image: node:24.0.2-alpine3.20
+
+variables:
+  PNPM_STORE_PATH: .pnpm-store
+
+stages:
+  - lint
+  - test
+
+default:
+  before_script:
+    - npm install -g corepack@latest
+    - corepack enable
+    - corepack prepare pnpm@10.11.0 --activate
+    - pnpm config set store-dir $PNPM_STORE_PATH
+    - pnpm install
+
+  cache:
+    key:
+      files:
+        - pnpm-lock.yaml
+
+    paths:
+      - $PNPM_STORE_PATH
+
+lint:
+  stage: lint
+
+  script:
+    - echo 'Krasa_Tohoto_PR 9001' > metrics.txt && pnpm lint
+
+  artifacts:
+    untracked: false
+    when: always
+    access: all
+    expire_in: "30 days"
+
+    reports:
+      codequality: gl-codequality.json
+
+      metrics: metrics.txt
+
+test:
+  stage: test
+
+  dependencies:
+    - lint
+
+  script:
+    - pnpm test
+
+  coverage: /All files[^\|]*\|[^\|]*\s+([\d\.]+)/
+
+  artifacts:
+    untracked: false
+    when: always
+    access: all
+    expire_in: "30 days"
+
+    reports:
+      junit:
+        - "./**/junit.xml"
+
+      coverage_report:
+        coverage_format: cobertura
+        path: "./**/cobertura-coverage.xml"
