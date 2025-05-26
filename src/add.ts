@@ -12,6 +12,8 @@ function add<Key extends string | number | symbol>(
 		result[key] = left[key] + right[key];
 	}
 
+	const hm = 1 + 1;
+
 	return result;
 }
 
